@@ -16,20 +16,34 @@ app.get("/", (req, res) => {
 });
 
 const USERS = [
-  {
-    _id: "73b86379-b4a8-4722-82a3-cf41bc30f1f7",
-    username: "asad",
-  },
+  // {
+  //   _id: "73b86379-b4a8-4722-82a3-cf41bc30f1f7",
+  //   username: "asad",
+  // },
 ];
 
 const EXERCISES = [
-  {
-    _id: "73b86379-b4a8-4722-82a3-cf41bc30f1f7",
-    username: "asad",
-    description: "desc",
-    duration: 2,
-    date: "Sat Feb 10 2024",
-  },
+  // {
+  //   _id: "73b86379-b4a8-4722-82a3-cf41bc30f1f7",
+  //   username: "asad",
+  //   description: "desc",
+  //   duration: 2,
+  //   date: "Sat Oct 20 2024",
+  // },
+  // {
+  //   _id: "73b86379-b4a8-4722-82a3-cf41bc30f1f7",
+  //   username: "asad",
+  //   description: "hello",
+  //   duration: 10,
+  //   date: "Sat Oct 19 2024",
+  // },
+  // {
+  //   _id: "73b86379-b4a8-4722-82a3-cf41bc30f1f7",
+  //   username: "asad",
+  //   description: "hello",
+  //   duration: 10,
+  //   date: "Sat Oct 21 2024",
+  // },
 ];
 
 app.get("/api/users", (req, res) => {
@@ -80,11 +94,23 @@ app.post("/api/users/:_id/exercises", (req, res) => {
   res.json(exercise);
 });
 
-app.get("/api/users/:id/logs", (req, res) => {
+app.get("/api/users/:id/logs?", (req, res) => {
   const userId = req.params.id;
   const user = USERS.find(({ _id }) => _id === userId);
   if (!user) return res.status(404).send("User not exist with this userId");
-  const exercises = EXERCISES.filter(({ _id }) => _id === userId).map((e) => {
+
+  let { from, to, limit } = req.query;
+  from && (from = new Date(from));
+  to && (to = new Date(to));
+  limit && (limit = parseInt(limit));
+
+  let exercises = EXERCISES.filter(({ _id }) => _id === userId);
+  if (from && from.toString() !== "Invalid Date")
+    exercises = exercises.filter((e) => new Date(e.date) >= from);
+  if (to && to.toString() !== "Invalid Date")
+    exercises = exercises.filter((e) => new Date(e.date) <= to);
+  if (limit) exercises = exercises.slice(0, limit);
+  exercises = exercises.map((e) => {
     const exercise = { ...e };
     delete exercise._id;
     return exercise;
@@ -94,7 +120,7 @@ app.get("/api/users/:id/logs", (req, res) => {
     username: user.username,
     count: exercises.length,
     _id: userId,
-    logs: exercises,
+    log: exercises,
   });
 });
 
